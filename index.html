@@ -145,7 +145,8 @@
             <canvas id="beakerCanvas" width="400" height="420" class="max-w-full h-auto drop-shadow-xl"></canvas>
             <!-- 비커 하단 안내 문구 -->
             <div class="absolute bottom-2 left-3 right-3 flex items-center justify-between text-[11px] text-slate-400 font-mono pointer-events-none">
-              <span>초기: 묽은 염산(HCl) 10mL</span>
+              <span>초기: 묽은 염산 10mL</span>
+              <span>총 부피: <b id="valTotalVol" class="text-cyan-400">10.0 mL</b></span>
               <span>주입량: <b id="valVolume" class="text-blue-400">0.0 mL</b></span>
             </div>
           </div>
@@ -312,7 +313,8 @@
     class NeutralizationReaction {
       constructor(initialHclVolume = 10, initialConcentration = 1) {
         this.initialHclVolume = initialHclVolume;
-        this.initialParticles = initialHclVolume;
+        this.initialConcentration = initialConcentration;
+        this.initialParticles = Math.round(initialHclVolume * initialConcentration);
         this.reset();
       }
       reset() {
@@ -1636,6 +1638,7 @@
         setTxt('valH2O', state.h2oCount);
         setTxt('valTemp', `${state.temperature.toFixed(1)}°C`);
         setTxt('valVolume', `${state.naohVolume.toFixed(1)} mL`);
+        setTxt('valTotalVol', `${state.totalVolume.toFixed(1)} mL`);
       }
 
       let lastTime = performance.now();
@@ -1659,49 +1662,61 @@
       requestAnimationFrame(mainLoop);
 
       // 컨트롤 버튼
+      const btnAuto = document.getElementById('btnAuto');
+      function stopAutoReaction() {
+        if (autoTimer) {
+          clearInterval(autoTimer);
+          autoTimer = null;
+          if (btnAuto) {
+            btnAuto.innerHTML = '<span>▶</span> <span>자동 연속 반응</span>';
+            btnAuto.classList.remove('bg-amber-600');
+            btnAuto.classList.add('bg-indigo-600');
+          }
+        }
+      }
+
       document.getElementById('btnDrop1')?.addEventListener('click', () => {
+        const curr = reaction.getState().naohVolume;
+        if (curr >= 20) return;
         sound.playDrop();
         particleSim.spawnDropAnimation('NaOH', () => {
-          reaction.addNaoh(1);
+          reaction.addNaoh(Math.min(1, 20 - reaction.getState().naohVolume));
           updateAllViews();
           if (reaction.getState().isEquivalencePoint) sound.playEquivalenceFanfare();
         });
       });
 
       document.getElementById('btnDrop5')?.addEventListener('click', () => {
+        const curr = reaction.getState().naohVolume;
+        if (curr >= 20) return;
         sound.playDrop();
         particleSim.spawnDropAnimation('NaOH', () => {
-          reaction.addNaoh(5);
+          reaction.addNaoh(Math.min(5, 20 - reaction.getState().naohVolume));
           updateAllViews();
           if (reaction.getState().isEquivalencePoint) sound.playEquivalenceFanfare();
         });
       });
 
-      const btnAuto = document.getElementById('btnAuto');
       btnAuto?.addEventListener('click', () => {
         if (autoTimer) {
-          clearInterval(autoTimer);
-          autoTimer = null;
-          btnAuto.innerHTML = '<span>▶</span> <span>자동 연속 반응</span>';
-          btnAuto.classList.remove('bg-amber-600');
-          btnAuto.classList.add('bg-indigo-600');
+          stopAutoReaction();
         } else {
+          if (reaction.getState().naohVolume >= 20) {
+            reaction.reset();
+            updateAllViews();
+          }
           btnAuto.innerHTML = '<span>⏸</span> <span>일시정지</span>';
           btnAuto.classList.remove('bg-indigo-600');
           btnAuto.classList.add('bg-amber-600');
 
           autoTimer = setInterval(() => {
             if (reaction.getState().naohVolume >= 20) {
-              clearInterval(autoTimer);
-              autoTimer = null;
-              btnAuto.innerHTML = '<span>▶</span> <span>자동 연속 반응</span>';
-              btnAuto.classList.remove('bg-amber-600');
-              btnAuto.classList.add('bg-indigo-600');
+              stopAutoReaction();
               return;
             }
             sound.playDrop();
             particleSim.spawnDropAnimation('NaOH', () => {
-              reaction.addNaoh(1);
+              reaction.addNaoh(Math.min(1, 20 - reaction.getState().naohVolume));
               updateAllViews();
               if (reaction.getState().isEquivalencePoint) sound.playEquivalenceFanfare();
             });
@@ -1710,17 +1725,14 @@
       });
 
       document.getElementById('btnEquiv')?.addEventListener('click', () => {
+        stopAutoReaction();
         reaction.setNaohVolume(10);
         updateAllViews();
         sound.playEquivalenceFanfare();
       });
 
       document.getElementById('btnReset')?.addEventListener('click', () => {
-        if (autoTimer) {
-          clearInterval(autoTimer);
-          autoTimer = null;
-          if (btnAuto) btnAuto.innerHTML = '<span>▶</span> <span>자동 연속 반응</span>';
-        }
+        stopAutoReaction();
         reaction.reset();
         updateAllViews();
       });

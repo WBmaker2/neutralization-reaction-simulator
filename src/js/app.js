@@ -108,9 +108,11 @@ export function initApp() {
   const btnDrop1 = document.getElementById('btnDrop1');
   if (btnDrop1) {
     btnDrop1.addEventListener('click', () => {
+      const curr = reaction.getState().naohVolume;
+      if (curr >= 20) return;
       sound.playDrop();
       particleSim.spawnDropAnimation('NaOH', () => {
-        reaction.addNaoh(1);
+        reaction.addNaoh(Math.min(1, 20 - reaction.getState().naohVolume));
         updateAllViews();
         const st = reaction.getState();
         if (st.isEquivalencePoint) sound.playEquivalenceFanfare();
@@ -121,9 +123,11 @@ export function initApp() {
   const btnDrop5 = document.getElementById('btnDrop5');
   if (btnDrop5) {
     btnDrop5.addEventListener('click', () => {
+      const curr = reaction.getState().naohVolume;
+      if (curr >= 20) return;
       sound.playDrop();
       particleSim.spawnDropAnimation('NaOH', () => {
-        reaction.addNaoh(5);
+        reaction.addNaoh(Math.min(5, 20 - reaction.getState().naohVolume));
         updateAllViews();
         const st = reaction.getState();
         if (st.isEquivalencePoint) sound.playEquivalenceFanfare();
@@ -132,32 +136,40 @@ export function initApp() {
   }
 
   const btnAuto = document.getElementById('btnAuto');
+  function stopAutoReaction() {
+    if (autoTimer) {
+      clearInterval(autoTimer);
+      autoTimer = null;
+      if (btnAuto) {
+        btnAuto.innerHTML = '<span>▶</span> <span>자동 연속 반응</span>';
+        btnAuto.classList.remove('bg-amber-600', 'hover:bg-amber-500');
+        btnAuto.classList.add('bg-indigo-600', 'hover:bg-indigo-500');
+      }
+    }
+  }
+
   if (btnAuto) {
     btnAuto.addEventListener('click', () => {
       if (autoTimer) {
-        clearInterval(autoTimer);
-        autoTimer = null;
-        btnAuto.innerHTML = '▶ 자동 연속 반응';
-        btnAuto.classList.remove('bg-amber-600', 'hover:bg-amber-500');
-        btnAuto.classList.add('bg-indigo-600', 'hover:bg-indigo-500');
+        stopAutoReaction();
       } else {
-        btnAuto.innerHTML = '⏸ 일시정지';
+        if (reaction.getState().naohVolume >= 20) {
+          reaction.reset();
+          updateAllViews();
+        }
+        btnAuto.innerHTML = '<span>⏸</span> <span>일시정지</span>';
         btnAuto.classList.remove('bg-indigo-600', 'hover:bg-indigo-500');
         btnAuto.classList.add('bg-amber-600', 'hover:bg-amber-500');
 
         autoTimer = setInterval(() => {
           const st = reaction.getState();
           if (st.naohVolume >= 20) {
-            clearInterval(autoTimer);
-            autoTimer = null;
-            btnAuto.innerHTML = '▶ 자동 연속 반응';
-            btnAuto.classList.remove('bg-amber-600', 'hover:bg-amber-500');
-            btnAuto.classList.add('bg-indigo-600', 'hover:bg-indigo-500');
+            stopAutoReaction();
             return;
           }
           sound.playDrop();
           particleSim.spawnDropAnimation('NaOH', () => {
-            reaction.addNaoh(1);
+            reaction.addNaoh(Math.min(1, 20 - reaction.getState().naohVolume));
             updateAllViews();
             const currSt = reaction.getState();
             if (currSt.isEquivalencePoint) sound.playEquivalenceFanfare();
@@ -170,6 +182,7 @@ export function initApp() {
   const btnEquiv = document.getElementById('btnEquiv');
   if (btnEquiv) {
     btnEquiv.addEventListener('click', () => {
+      stopAutoReaction();
       reaction.setNaohVolume(10);
       updateAllViews();
       sound.playEquivalenceFanfare();
@@ -180,11 +193,7 @@ export function initApp() {
   const btnReset = document.getElementById('btnReset');
   if (btnReset) {
     btnReset.addEventListener('click', () => {
-      if (autoTimer) {
-        clearInterval(autoTimer);
-        autoTimer = null;
-        if (btnAuto) btnAuto.innerHTML = '▶ 자동 연속 반응';
-      }
+      stopAutoReaction();
       reaction.reset();
       updateAllViews();
     });

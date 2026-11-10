@@ -1,0 +1,1910 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>중화 반응 가상 실험실 (HCl + NaOH 시뮬레이터)</title>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Pretendard:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@500;700&display=swap');
+    body {
+      font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, Roboto, sans-serif;
+    }
+    .font-mono {
+      font-family: 'JetBrains Mono', monospace;
+    }
+    /* Custom Scrollbar */
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: rgba(15, 23, 42, 0.6);
+    }
+    ::-webkit-scrollbar-thumb {
+      background: rgba(100, 116, 139, 0.5);
+      border-radius: 9999px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: rgba(148, 163, 184, 0.8);
+    }
+  </style>
+</head>
+<body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col antialiased selection:bg-blue-600 selection:text-white">
+
+  <!-- 헤더 영역 -->
+  <header class="border-b border-slate-800 bg-slate-900/90 backdrop-blur-md sticky top-0 z-50 px-4 lg:px-8 py-3.5 flex flex-wrap items-center justify-between gap-4">
+    <div class="flex items-center gap-3">
+      <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-blue-600 to-indigo-500 flex items-center justify-center text-xl shadow-lg shadow-blue-500/30">
+        🧪
+      </div>
+      <div>
+        <h1 class="text-lg lg:text-xl font-black text-white tracking-tight flex items-center gap-2">
+          중화 반응 가상 실험실
+          <span class="text-xs px-2 py-0.5 rounded-full bg-blue-500/20 text-blue-400 border border-blue-500/30 font-semibold">HCl + NaOH</span>
+        </h1>
+        <p class="text-xs text-slate-400">2022 개정 교육과정 중3 과학 & 고교 통합과학 | 산과 염기의 중화 반응 시각화</p>
+      </div>
+    </div>
+
+    <!-- 네비게이션 탭 -->
+    <nav class="flex items-center bg-slate-800/80 p-1 rounded-xl border border-slate-700/60 shadow-inner">
+      <button id="tabBtnLab" class="px-4 py-2 rounded-lg text-sm font-bold bg-blue-600 text-white shadow-md transition-all flex items-center gap-1.5">
+        <span>🧪</span> <span>가상 실험실</span>
+      </button>
+      <button id="tabBtnConcept" class="px-4 py-2 rounded-lg text-sm font-medium text-slate-400 hover:text-white hover:bg-slate-800 transition-all flex items-center gap-1.5">
+        <span>📖</span> <span>핵심 개념 탐구</span>
+      </button>
+      <button id="tabBtnQuiz" class="px-4 py-2 rounded-lg text-sm font-medium text-slate-400 hover:text-white hover:bg-slate-800 transition-all flex items-center gap-1.5">
+        <span>🏆</span> <span>형성평가 골든벨</span>
+      </button>
+    </nav>
+
+    <!-- 사운드 토글 -->
+    <div class="flex items-center gap-2">
+      <button id="btnSound" class="px-3.5 py-1.5 rounded-xl border border-slate-700 bg-slate-800/60 hover:bg-slate-700 text-xs font-semibold text-emerald-400 transition-all flex items-center gap-1.5">
+        🔊 소리 켜짐
+      </button>
+    </div>
+  </header>
+
+  <!-- 메인 콘텐츠 영역 -->
+  <main class="flex-1 max-w-[1600px] w-full mx-auto p-4 lg:p-6 flex flex-col gap-6">
+
+    <!-- ================= 탭 1: 가상 실험실 ================= -->
+    <section id="panelLab" class="flex flex-col gap-6">
+      
+      <!-- 상단 상태 배지 및 정보 바 -->
+      <div class="bg-slate-900/80 border border-slate-800 rounded-2xl p-4 flex flex-wrap items-center justify-between gap-4 shadow-xl">
+        <div class="flex items-center gap-3">
+          <span class="text-xs text-slate-400 font-bold uppercase tracking-wider">현재 용액 상태:</span>
+          <div id="statusBadge" class="px-3.5 py-1 rounded-full text-xs font-bold bg-amber-500/20 text-amber-300 border border-amber-500/40 animate-pulse">
+            🟡 산성 (H⁺ > OH⁻, pH < 7)
+          </div>
+        </div>
+
+        <!-- 실시간 이온 카운터 요약 바 -->
+        <div class="flex items-center gap-2 sm:gap-4 text-xs font-mono bg-slate-950/70 px-4 py-2 rounded-xl border border-slate-800/80 flex-wrap">
+          <div class="flex items-center gap-1.5">
+            <span class="w-2.5 h-2.5 rounded-full bg-red-500"></span>
+            <span class="text-slate-400">H⁺:</span>
+            <b id="valH" class="text-red-400 text-sm">10</b>
+          </div>
+          <div class="flex items-center gap-1.5">
+            <span class="w-2.5 h-2.5 rounded-full bg-emerald-500"></span>
+            <span class="text-slate-400">Cl⁻:</span>
+            <b id="valCl" class="text-emerald-400 text-sm">10</b>
+          </div>
+          <div class="flex items-center gap-1.5">
+            <span class="w-2.5 h-2.5 rounded-full bg-purple-500"></span>
+            <span class="text-slate-400">Na⁺:</span>
+            <b id="valNa" class="text-purple-400 text-sm">0</b>
+          </div>
+          <div class="flex items-center gap-1.5">
+            <span class="w-2.5 h-2.5 rounded-full bg-blue-500"></span>
+            <span class="text-slate-400">OH⁻:</span>
+            <b id="valOH" class="text-blue-400 text-sm">0</b>
+          </div>
+          <div class="flex items-center gap-1.5 border-l border-slate-700 pl-3">
+            <span class="text-cyan-400">생성된 H₂O:</span>
+            <b id="valH2O" class="text-cyan-300 text-sm">0</b>
+          </div>
+          <div class="flex items-center gap-1.5 border-l border-slate-700 pl-3">
+            <span class="text-amber-400">온도:</span>
+            <b id="valTemp" class="text-amber-300 text-sm">20.0°C</b>
+          </div>
+        </div>
+      </div>
+
+      <!-- 트리플 싱크 3분할 뷰 그리드 -->
+      <div class="grid grid-cols-1 xl:grid-cols-3 gap-6">
+
+        <!-- ① 거시적 실험 챔버 (비커 + 뷰렛 + 온도계) -->
+        <div class="bg-slate-900/80 border border-slate-800/90 rounded-3xl p-5 flex flex-col shadow-2xl relative overflow-hidden group">
+          <div class="flex items-center justify-between mb-3">
+            <h2 class="text-sm font-bold text-slate-200 flex items-center gap-2">
+              <span class="w-2.5 h-2.5 rounded-full bg-blue-500"></span>
+              ① 거시적 실험실 뷰 (비커 & 지시약)
+            </h2>
+            <!-- 지시약 선택기 -->
+            <div class="flex items-center gap-3 text-xs bg-slate-950/80 px-2.5 py-1 rounded-lg border border-slate-800">
+              <label class="flex items-center gap-1 cursor-pointer">
+                <input type="radio" name="indicator" value="btb" checked class="text-blue-600 focus:ring-0">
+                <span class="text-slate-300">BTB 용액</span>
+              </label>
+              <label class="flex items-center gap-1 cursor-pointer">
+                <input type="radio" name="indicator" value="pp" class="text-blue-600 focus:ring-0">
+                <span class="text-slate-300">페놀프탈레인</span>
+              </label>
+            </div>
+          </div>
+
+          <!-- 비커 캔버스 -->
+          <div class="flex-1 bg-slate-950/60 rounded-2xl border border-slate-800/80 flex items-center justify-center relative min-h-[360px] p-2">
+            <canvas id="beakerCanvas" width="400" height="420" class="max-w-full h-auto drop-shadow-xl"></canvas>
+            <!-- 비커 하단 안내 문구 -->
+            <div class="absolute bottom-2 left-3 right-3 flex items-center justify-between text-[11px] text-slate-400 font-mono pointer-events-none">
+              <span>초기: 묽은 염산(HCl) 10mL</span>
+              <span>주입량: <b id="valVolume" class="text-blue-400">0.0 mL</b></span>
+            </div>
+          </div>
+        </div>
+
+        <!-- ② 미시적 이온 시뮬레이션 (Canvas 2D 입자 물리 엔진) -->
+        <div class="bg-slate-900/80 border border-slate-800/90 rounded-3xl p-5 flex flex-col shadow-2xl relative overflow-hidden">
+          <div class="flex items-center justify-between mb-3 flex-wrap gap-2">
+            <h2 class="text-sm font-bold text-slate-200 flex items-center gap-2">
+              <span class="w-2.5 h-2.5 rounded-full bg-emerald-500"></span>
+              ② 미시적 이온 반응 뷰 (돋보기 확대경)
+            </h2>
+            <!-- 파티클 제어 토글 -->
+            <div class="flex items-center gap-3 text-xs">
+              <label class="flex items-center gap-1.5 cursor-pointer text-slate-300">
+                <input type="checkbox" id="chkNetIons" class="rounded bg-slate-800 border-slate-700 text-blue-600 focus:ring-0">
+                <span>알짜 이온만 강조</span>
+              </label>
+              <label class="flex items-center gap-1.5 cursor-pointer text-slate-300">
+                <input type="checkbox" id="chkWater" checked class="rounded bg-slate-800 border-slate-700 text-blue-600 focus:ring-0">
+                <span>물 분자 표시</span>
+              </label>
+            </div>
+          </div>
+
+          <!-- 파티클 캔버스 -->
+          <div class="flex-1 bg-slate-950/60 rounded-2xl border border-slate-800/80 flex items-center justify-center relative min-h-[360px] p-2 overflow-hidden">
+            <canvas id="particleCanvas" width="420" height="420" class="max-w-full h-auto drop-shadow-2xl"></canvas>
+            
+            <!-- 입자 설명 레전드 -->
+            <div class="absolute top-3 left-3 bg-slate-900/90 backdrop-blur-sm border border-slate-800 px-3 py-1.5 rounded-xl text-[10px] space-y-1 shadow-md pointer-events-none">
+              <div class="flex items-center gap-2">
+                <span class="w-2 h-2 rounded-full bg-red-500"></span> <span class="text-slate-300">H⁺ (수소 이온)</span>
+              </div>
+              <div class="flex items-center gap-2">
+                <span class="w-2 h-2 rounded-full bg-blue-500"></span> <span class="text-slate-300">OH⁻ (수산화 이온)</span>
+              </div>
+              <div class="flex items-center gap-2">
+                <span class="w-2 h-2 rounded-full bg-emerald-500"></span> <span class="text-slate-300">Cl⁻ (염화 이온 - 구경꾼)</span>
+              </div>
+              <div class="flex items-center gap-2">
+                <span class="w-2 h-2 rounded-full bg-purple-500"></span> <span class="text-slate-300">Na⁺ (나트륨 이온 - 구경꾼)</span>
+              </div>
+            </div>
+
+            <!-- 알짜 반응식 배너 -->
+            <div class="absolute bottom-2 inset-x-3 text-center bg-slate-900/85 backdrop-blur-sm border border-slate-800 py-1.5 rounded-xl text-xs font-mono text-cyan-300 shadow">
+              알짜 반응: H⁺ + OH⁻ → H₂O + 중화열 (1:1 결합)
+            </div>
+          </div>
+        </div>
+
+        <!-- ③ 정량적 실시간 차트 & 통계 패널 -->
+        <div class="bg-slate-900/80 border border-slate-800/90 rounded-3xl p-5 flex flex-col shadow-2xl relative">
+          <div class="flex items-center justify-between mb-3">
+            <h2 class="text-sm font-bold text-slate-200 flex items-center gap-2">
+              <span class="w-2.5 h-2.5 rounded-full bg-purple-500"></span>
+              ③ 정량적 실시간 그래프 (이온수 & 온도)
+            </h2>
+            <div class="flex items-center gap-1 text-xs text-slate-400">
+              <span>배속:</span>
+              <select id="selSpeed" class="bg-slate-800 text-slate-200 border border-slate-700 rounded px-1.5 py-0.5 text-xs">
+                <option value="0.5">0.5x</option>
+                <option value="1.0" selected>1.0x</option>
+                <option value="2.0">2.0x</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="flex-1 flex flex-col gap-3">
+            <!-- 1. 이온수 그래프 캔버스 -->
+            <div class="bg-slate-950/60 rounded-2xl border border-slate-800/80 p-2 flex items-center justify-center">
+              <canvas id="ionChartCanvas" width="420" height="200" class="max-w-full h-auto"></canvas>
+            </div>
+            <!-- 2. 온도 곡선 그래프 캔버스 -->
+            <div class="bg-slate-950/60 rounded-2xl border border-slate-800/80 p-2 flex items-center justify-center">
+              <canvas id="tempChartCanvas" width="420" height="180" class="max-w-full h-auto"></canvas>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- 하단 메인 실험 조작 컨트롤러 바 -->
+      <div class="bg-slate-900/90 border border-slate-800 rounded-3xl p-4 lg:p-6 shadow-2xl flex flex-wrap items-center justify-between gap-4">
+        <div class="flex items-center gap-3">
+          <span class="text-sm font-bold text-slate-300 hidden sm:inline">실험 조작:</span>
+          <!-- 1방울 주입 버튼 -->
+          <button id="btnDrop1" class="h-12 px-5 bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-500 hover:to-blue-400 active:scale-95 text-white font-bold rounded-2xl shadow-lg shadow-blue-500/25 transition-all flex items-center gap-2 text-sm">
+            <span>💧</span> <span>1방울 주입 (+1mL)</span>
+          </button>
+          <!-- 5방울 주입 버튼 -->
+          <button id="btnDrop5" class="h-12 px-5 bg-gradient-to-r from-indigo-600 to-indigo-500 hover:from-indigo-500 hover:to-indigo-400 active:scale-95 text-white font-bold rounded-2xl shadow-lg shadow-indigo-500/25 transition-all flex items-center gap-2 text-sm">
+            <span>⏩</span> <span>5방울 주입 (+5mL)</span>
+          </button>
+          <!-- 자동 연속 반응 토글 버튼 -->
+          <button id="btnAuto" class="h-12 px-5 bg-indigo-600 hover:bg-indigo-500 active:scale-95 text-white font-bold rounded-2xl shadow-lg shadow-indigo-600/25 transition-all flex items-center gap-2 text-sm">
+            <span>▶</span> <span>자동 연속 반응</span>
+          </button>
+        </div>
+
+        <div class="flex items-center gap-3">
+          <!-- 중화점 바로가기 프리셋 버튼 -->
+          <button id="btnEquiv" class="h-12 px-5 bg-emerald-600/30 hover:bg-emerald-600/40 border border-emerald-500/50 text-emerald-300 active:scale-95 font-bold rounded-2xl shadow-lg shadow-emerald-500/10 transition-all flex items-center gap-2 text-sm">
+            <span>🎯</span> <span>중화점(10mL) 바로가기</span>
+          </button>
+          <!-- 초기화 버튼 -->
+          <button id="btnReset" class="h-12 px-5 bg-slate-800 hover:bg-slate-700 active:scale-95 border border-slate-700 text-slate-300 hover:text-white font-bold rounded-2xl shadow transition-all flex items-center gap-2 text-sm">
+            <span>↺</span> <span>실험 초기화</span>
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= 탭 2: 핵심 개념 탐구 ================= -->
+    <section id="panelConcept" class="hidden flex flex-col gap-6">
+      <div class="bg-slate-900/80 border border-slate-800 rounded-2xl p-6 shadow-xl">
+        <h2 class="text-xl font-bold text-white mb-2 flex items-center gap-2">
+          <span>📖</span> 2022 개정 교육과정 중화 반응 핵심 개념 탐구
+        </h2>
+        <p class="text-sm text-slate-400 mb-6">
+          산(묽은 염산)과 염기(수산화나트륨)가 만나 물과 염을 형성하는 중화 반응의 핵심 원리를 한눈에 정리합니다.
+        </p>
+
+        <!-- 개념 카드 그리드 -->
+        <div id="conceptCardsContainer" class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <!-- JS에서 동적 렌더링 -->
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= 탭 3: 형성평가 골든벨 ================= -->
+    <section id="panelQuiz" class="hidden flex flex-col gap-6 relative">
+      <!-- 퀴즈 전용 폭죽 캔버스 (Overlay) -->
+      <canvas id="confettiCanvas" width="800" height="600" class="absolute inset-0 pointer-events-none w-full h-full z-20"></canvas>
+
+      <div class="max-w-2xl w-full mx-auto bg-slate-900/90 border border-slate-800 rounded-3xl p-6 lg:p-8 shadow-2xl relative z-10">
+        <div class="text-center mb-6">
+          <h2 class="text-2xl font-black text-white tracking-tight flex items-center justify-center gap-2 mb-2">
+            <span>🏆</span> 형성평가 골든벨 (3문항)
+          </h2>
+          <p class="text-sm text-slate-400">
+            가상 실험실에서 관찰한 이온 모형과 중화 반응 개념을 퀴즈로 확인해 보세요!
+          </p>
+        </div>
+
+        <!-- 퀴즈 카드 -->
+        <div id="quizCard" class="bg-slate-950/70 border border-slate-800 rounded-2xl p-6 shadow-inner">
+          <!-- JS에서 렌더링 -->
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- 하단 풋터 -->
+  <footer class="border-t border-slate-800/80 bg-slate-900/60 py-4 text-center text-xs text-slate-500">
+    대한민국 2022 개정 교육과정 기준 과학 시뮬레이터 | 단일 무설치 Standalone Virtual Lab
+  </footer>
+
+  <!-- ================= INLINE SCRIPT BUNDLE (Zero-Setup Architecture) ================= -->
+  <script>
+    /* 1. NeutralizationReaction State Machine */
+    class NeutralizationReaction {
+      constructor(initialHclVolume = 10, initialConcentration = 1) {
+        this.initialHclVolume = initialHclVolume;
+        this.initialParticles = initialHclVolume;
+        this.reset();
+      }
+      reset() {
+        this.naohVolume = 0;
+      }
+      addNaoh(volumeMl) {
+        this.naohVolume = Math.max(0, Math.round((this.naohVolume + volumeMl) * 1000) / 1000);
+      }
+      setNaohVolume(volumeMl) {
+        this.naohVolume = Math.max(0, Math.round(volumeMl * 1000) / 1000);
+      }
+      getState() {
+        const hclVol = this.initialHclVolume;
+        const naohVol = this.naohVolume;
+        const totalVolume = hclVol + naohVol;
+        const initialH = this.initialParticles;
+        const initialCl = this.initialParticles;
+        const addedNa = Math.round(naohVol);
+        const addedOH = Math.round(naohVol);
+        const reactedH2O = Math.min(initialH, addedOH);
+        const hCount = Math.max(0, initialH - addedOH);
+        const ohCount = Math.max(0, addedOH - initialH);
+        const clCount = initialCl;
+        const naCount = addedNa;
+        const totalIons = hCount + clCount + naCount + ohCount;
+
+        let temperature;
+        if (naohVol <= hclVol) {
+          temperature = 20.0 + (reactedH2O * 0.85);
+        } else {
+          const heatLostFactor = (naohVol - hclVol) * 0.28;
+          temperature = Math.max(20.0, 28.5 - heatLostFactor);
+        }
+        temperature = Math.round(temperature * 10) / 10;
+
+        let solutionState;
+        let btbColor;
+        let ppColor;
+        const isEquivalencePoint = (hCount === 0 && ohCount === 0 && naohVol > 0);
+
+        if (hCount > ohCount) {
+          solutionState = '산성';
+          btbColor = '#F59E0B';
+          ppColor = 'rgba(224, 242, 254, 0.4)';
+        } else if (isEquivalencePoint) {
+          solutionState = '중성';
+          btbColor = '#10B981';
+          ppColor = 'rgba(224, 242, 254, 0.4)';
+        } else {
+          solutionState = '염기성';
+          btbColor = '#2563EB';
+          ppColor = '#E11D48';
+        }
+
+        return {
+          hclVolume: hclVol,
+          naohVolume: naohVol,
+          totalVolume,
+          hCount,
+          clCount,
+          naCount,
+          ohCount,
+          h2oCount: reactedH2O,
+          totalIons,
+          temperature,
+          solutionState,
+          btbColor,
+          ppColor,
+          isEquivalencePoint
+        };
+      }
+      getCurveData(maxVolume = 20, step = 0.5) {
+        const originalVol = this.naohVolume;
+        const points = [];
+        for (let v = 0; v <= maxVolume; v = Math.round((v + step) * 1000) / 1000) {
+          this.setNaohVolume(v);
+          const st = this.getState();
+          points.push({ volume: v, ...st });
+        }
+        this.setNaohVolume(originalVol);
+        return points;
+      }
+    }
+
+    /* 2. Web Audio Sound Engine */
+    class SoundEngine {
+      constructor(audioContext = null) {
+        this.ctx = audioContext;
+        this.muted = false;
+      }
+      getAudioContext() {
+        if (!this.ctx) {
+          try {
+            const AudioCtxClass = window.AudioContext || window.webkitAudioContext;
+            if (AudioCtxClass) this.ctx = new AudioCtxClass();
+          } catch (_) { return null; }
+        }
+        if (this.ctx && this.ctx.state === 'suspended' && typeof this.ctx.resume === 'function') {
+          this.ctx.resume().catch(() => {});
+        }
+        return this.ctx || null;
+      }
+      setMuted(muted) { this.muted = Boolean(muted); }
+      isMuted() { return this.muted; }
+      toggleMute() { this.muted = !this.muted; return this.muted; }
+      _createVoice(ctx) {
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.onended = () => {
+          try { osc.disconnect(); gain.disconnect(); } catch (_) {}
+        };
+        return { osc, gain };
+      }
+      playDrop() {
+        if (this.muted) return;
+        const ctx = this.getAudioContext();
+        if (!ctx) return;
+        try {
+          const now = ctx.currentTime;
+          const { osc, gain } = this._createVoice(ctx);
+          osc.type = 'sine';
+          osc.frequency.setValueAtTime(800, now);
+          osc.frequency.exponentialRampToValueAtTime(300, now + 0.12);
+          gain.gain.setValueAtTime(0.25, now);
+          gain.gain.exponentialRampToValueAtTime(0.001, now + 0.12);
+          osc.start(now);
+          osc.stop(now + 0.12);
+        } catch (_) {}
+      }
+      playReact() {
+        if (this.muted) return;
+        const ctx = this.getAudioContext();
+        if (!ctx) return;
+        try {
+          const now = ctx.currentTime;
+          const { osc, gain } = this._createVoice(ctx);
+          osc.type = 'triangle';
+          osc.frequency.setValueAtTime(520, now);
+          osc.frequency.exponentialRampToValueAtTime(1100, now + 0.08);
+          gain.gain.setValueAtTime(0.22, now);
+          gain.gain.exponentialRampToValueAtTime(0.001, now + 0.08);
+          osc.start(now);
+          osc.stop(now + 0.08);
+        } catch (_) {}
+      }
+      playEquivalenceFanfare() {
+        if (this.muted) return;
+        const ctx = this.getAudioContext();
+        if (!ctx) return;
+        try {
+          const notes = [
+            { freq: 523.25, timeOffset: 0.0, dur: 0.15 },
+            { freq: 659.25, timeOffset: 0.12, dur: 0.15 },
+            { freq: 783.99, timeOffset: 0.24, dur: 0.20 },
+            { freq: 1046.50, timeOffset: 0.40, dur: 0.55 }
+          ];
+          const now = ctx.currentTime;
+          notes.forEach(({ freq, timeOffset, dur }) => {
+            const start = now + timeOffset;
+            const { osc, gain } = this._createVoice(ctx);
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(freq, start);
+            gain.gain.setValueAtTime(0.3, start);
+            gain.gain.exponentialRampToValueAtTime(0.001, start + dur);
+            osc.start(start);
+            osc.stop(start + dur);
+          });
+        } catch (_) {}
+      }
+      playCorrect() {
+        if (this.muted) return;
+        const ctx = this.getAudioContext();
+        if (!ctx) return;
+        try {
+          const notes = [
+            { freq: 392.00, timeOffset: 0.0, dur: 0.22 },
+            { freq: 523.25, timeOffset: 0.12, dur: 0.25 },
+            { freq: 659.25, timeOffset: 0.24, dur: 0.50 }
+          ];
+          const now = ctx.currentTime;
+          notes.forEach(({ freq, timeOffset, dur }) => {
+            const start = now + timeOffset;
+            const { osc, gain } = this._createVoice(ctx);
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(freq, start);
+            gain.gain.setValueAtTime(0.25, start);
+            gain.gain.exponentialRampToValueAtTime(0.001, start + dur);
+            osc.start(start);
+            osc.stop(start + dur);
+          });
+        } catch (_) {}
+      }
+      playIncorrect() {
+        if (this.muted) return;
+        const ctx = this.getAudioContext();
+        if (!ctx) return;
+        try {
+          const now = ctx.currentTime;
+          const { osc, gain } = this._createVoice(ctx);
+          osc.type = 'sawtooth';
+          osc.frequency.setValueAtTime(130, now);
+          osc.frequency.exponentialRampToValueAtTime(95, now + 0.38);
+          gain.gain.setValueAtTime(0.25, now);
+          gain.gain.exponentialRampToValueAtTime(0.001, now + 0.38);
+          osc.start(now);
+          osc.stop(now + 0.38);
+        } catch (_) {}
+      }
+    }
+
+    /* 3. Particle Simulation & 2D Physics Engine */
+    class IonParticle {
+      constructor(type, x, y, options = {}) {
+        this.type = type;
+        this.x = x;
+        this.y = y;
+        const angle = Math.random() * Math.PI * 2;
+        const speed = 25 + Math.random() * 35;
+        this.vx = Math.cos(angle) * speed;
+        this.vy = Math.sin(angle) * speed;
+        this.isReacted = false;
+
+        switch (type) {
+          case 'H+':
+            this.label = 'H⁺';
+            this.color = '#EF4444';
+            this.radius = 12;
+            this.isNet = true;
+            break;
+          case 'OH-':
+            this.label = 'OH⁻';
+            this.color = '#3B82F6';
+            this.radius = 14;
+            this.isNet = true;
+            break;
+          case 'Cl-':
+            this.label = 'Cl⁻';
+            this.color = '#10B981';
+            this.radius = 16;
+            this.isNet = false;
+            break;
+          case 'Na+':
+            this.label = 'Na⁺';
+            this.color = '#8B5CF6';
+            this.radius = 13;
+            this.isNet = false;
+            break;
+          default:
+            this.label = type;
+            this.color = '#94A3B8';
+            this.radius = 12;
+            this.isNet = false;
+        }
+      }
+      render(ctx, highlightNet = false) {
+        ctx.save();
+        const alpha = highlightNet && !this.isNet ? 0.2 : 1.0;
+        ctx.globalAlpha = alpha;
+
+        // 입자 외곽 은은한 후광
+        ctx.beginPath();
+        ctx.arc(this.x, this.y, this.radius + 3, 0, Math.PI * 2);
+        ctx.fillStyle = this.color;
+        ctx.globalAlpha = alpha * 0.25;
+        ctx.fill();
+
+        // 입자 본체
+        ctx.beginPath();
+        ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+        ctx.globalAlpha = alpha;
+        ctx.fillStyle = this.color;
+        ctx.fill();
+        ctx.strokeStyle = '#FFFFFF';
+        ctx.lineWidth = 1.5;
+        ctx.stroke();
+
+        // 라벨 텍스트
+        ctx.fillStyle = '#FFFFFF';
+        ctx.font = 'bold 10px sans-serif';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(this.label, this.x, this.y);
+        ctx.restore();
+      }
+    }
+
+    class WaterMolecule {
+      constructor(x, y) {
+        this.x = x;
+        this.y = y;
+        const angle = Math.random() * Math.PI * 2;
+        const speed = 15 + Math.random() * 25;
+        this.vx = Math.cos(angle) * speed;
+        this.vy = Math.sin(angle) * speed;
+        this.rotation = Math.random() * Math.PI * 2;
+        this.vRot = (Math.random() - 0.5) * 1.5;
+        this.radius = 18;
+      }
+      render(ctx) {
+        ctx.save();
+        ctx.translate(this.x, this.y);
+        ctx.rotate(this.rotation);
+        ctx.globalAlpha = 0.85;
+
+        // 중심 산소 원자 (O)
+        ctx.beginPath();
+        ctx.arc(0, 0, 10, 0, Math.PI * 2);
+        ctx.fillStyle = '#F87171';
+        ctx.fill();
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.7)';
+        ctx.lineWidth = 1;
+        ctx.stroke();
+
+        // 104.5도 각도로 결합된 수소 원자 2개 (H)
+        const bondLength = 12;
+        const halfAngle = (104.5 / 2) * (Math.PI / 180);
+        const h1x = Math.sin(halfAngle) * bondLength;
+        const h1y = Math.cos(halfAngle) * bondLength;
+        const h2x = -Math.sin(halfAngle) * bondLength;
+        const h2y = Math.cos(halfAngle) * bondLength;
+
+        // 결합선
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.5)';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.moveTo(0, 0); ctx.lineTo(h1x, h1y);
+        ctx.moveTo(0, 0); ctx.lineTo(h2x, h2y);
+        ctx.stroke();
+
+        // 수소 1
+        ctx.beginPath();
+        ctx.arc(h1x, h1y, 6, 0, Math.PI * 2);
+        ctx.fillStyle = '#E2E8F0'; ctx.fill();
+
+        // 수소 2
+        ctx.beginPath();
+        ctx.arc(h2x, h2y, 6, 0, Math.PI * 2);
+        ctx.fillStyle = '#E2E8F0'; ctx.fill();
+
+        // 라벨
+        ctx.fillStyle = '#FFFFFF';
+        ctx.font = 'bold 8px sans-serif';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText('H₂O', 0, -1);
+        ctx.restore();
+      }
+    }
+
+    class SparkParticle {
+      constructor(x, y) {
+        this.x = x;
+        this.y = y;
+        const angle = Math.random() * Math.PI * 2;
+        const speed = 40 + Math.random() * 120;
+        this.vx = Math.cos(angle) * speed;
+        this.vy = Math.sin(angle) * speed;
+        this.maxLife = 0.4 + Math.random() * 0.35;
+        this.life = this.maxLife;
+        this.radius = 2 + Math.random() * 3.5;
+        const colors = ['#F59E0B', '#FCD34D', '#EF4444', '#FFFFFF'];
+        this.color = colors[Math.floor(Math.random() * colors.length)];
+      }
+      update(dt) {
+        this.x += this.vx * dt;
+        this.y += this.vy * dt;
+        this.vx *= 0.96;
+        this.vy *= 0.96;
+        this.life -= dt;
+      }
+      render(ctx) {
+        if (this.life <= 0) return;
+        const alpha = Math.max(0, this.life / this.maxLife);
+        ctx.save();
+        ctx.globalAlpha = alpha;
+        ctx.fillStyle = this.color;
+        ctx.beginPath();
+        ctx.arc(this.x, this.y, this.radius * alpha, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+      }
+    }
+
+    class DropAnimation {
+      constructor(type, startX, startY, targetY, onComplete = null) {
+        this.type = type;
+        this.x = startX;
+        this.y = startY;
+        this.targetY = targetY;
+        this.onComplete = onComplete;
+        this.speed = 360;
+        this.radius = 6;
+        this.color = type === 'NaOH' ? '#3B82F6' : '#EF4444';
+        this.isDone = false;
+        this.rippleRadius = 0;
+        this.maxRippleRadius = 24;
+      }
+      update(dt) {
+        if (this.isDone) {
+          this.rippleRadius += dt * 45;
+          return;
+        }
+        this.y += this.speed * dt;
+        if (this.y >= this.targetY) {
+          this.y = this.targetY;
+          this.isDone = true;
+          if (typeof this.onComplete === 'function') this.onComplete();
+        }
+      }
+      isFinished() {
+        return this.isDone && this.rippleRadius >= this.maxRippleRadius;
+      }
+      render(ctx) {
+        ctx.save();
+        if (!this.isDone) {
+          ctx.fillStyle = this.color;
+          ctx.beginPath();
+          ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+          ctx.fill();
+        } else {
+          const alpha = Math.max(0, 1 - (this.rippleRadius / this.maxRippleRadius));
+          ctx.strokeStyle = this.color;
+          ctx.globalAlpha = alpha;
+          ctx.lineWidth = 2;
+          ctx.beginPath();
+          ctx.ellipse(this.x, this.targetY, this.rippleRadius, this.rippleRadius * 0.35, 0, 0, Math.PI * 2);
+          ctx.stroke();
+        }
+        ctx.restore();
+      }
+    }
+
+    class ParticleSimulation {
+      constructor(canvas, options = {}) {
+        this.canvas = canvas;
+        this.soundEngine = options.soundEngine || null;
+        this.onReactionOccurred = options.onReactionOccurred || null;
+        this.width = canvas?.width || 420;
+        this.height = canvas?.height || 420;
+        this.centerX = this.width / 2;
+        this.centerY = this.height / 2;
+        this.viewportRadius = Math.min(this.width, this.height) * 0.44;
+
+        this.particles = [];
+        this.waterMolecules = [];
+        this.sparks = [];
+        this.dropAnimations = [];
+
+        this.highlightNetIons = false;
+        this.showWaterMolecules = true;
+        this.speedMultiplier = 1.0;
+        this.isRunning = false;
+
+        this.attractionRadius = 75;
+        this.combinedRadius = 24;
+        this.thermalJitter = 160;
+        this.maxSpeed = 80;
+      }
+      setHighlightNetIons(val) { this.highlightNetIons = Boolean(val); }
+      setShowWaterMolecules(val) { this.showWaterMolecules = Boolean(val); }
+      setSpeed(multiplier) { this.speedMultiplier = Math.max(0.1, multiplier); }
+      start() { this.isRunning = true; }
+      stop() { this.isRunning = false; }
+      spawnDropAnimation(type, onComplete = null) {
+        const startX = this.centerX;
+        const startY = 10;
+        const targetY = this.centerY - this.viewportRadius + 35;
+        this.dropAnimations.push(new DropAnimation(type, startX, startY, targetY, onComplete));
+      }
+      spawnSparks(x, y, count = 12) {
+        for (let i = 0; i < count; i++) {
+          this.sparks.push(new SparkParticle(x, y));
+        }
+      }
+      _spawnRandomInBounds(type) {
+        const r = Math.sqrt(Math.random()) * (this.viewportRadius - 26);
+        const theta = Math.random() * Math.PI * 2;
+        const x = this.centerX + r * Math.cos(theta);
+        const y = this.centerY + r * Math.sin(theta);
+        return new IonParticle(type, x, y);
+      }
+      syncWithState(chemistryState) {
+        if (!chemistryState) return;
+        const targets = {
+          'H+': chemistryState.hCount || 0,
+          'OH-': chemistryState.ohCount || 0,
+          'Cl-': chemistryState.clCount || 0,
+          'Na+': chemistryState.naCount || 0
+        };
+        const counts = { 'H+': 0, 'OH-': 0, 'Cl-': 0, 'Na+': 0 };
+        this.particles.forEach(p => { if (counts[p.type] !== undefined) counts[p.type]++; });
+
+        for (const [type, target] of Object.entries(targets)) {
+          const diff = target - counts[type];
+          if (diff > 0) {
+            for (let i = 0; i < diff; i++) {
+              this.particles.push(this._spawnRandomInBounds(type));
+            }
+          } else if (diff < 0) {
+            let toRemove = -diff;
+            this.particles = this.particles.filter(p => {
+              if (p.type === type && toRemove > 0) {
+                toRemove--;
+                return false;
+              }
+              return true;
+            });
+          }
+        }
+
+        const targetWater = chemistryState.h2oCount || 0;
+        const diffWater = targetWater - this.waterMolecules.length;
+        if (diffWater > 0) {
+          for (let i = 0; i < diffWater; i++) {
+            const r = Math.sqrt(Math.random()) * (this.viewportRadius - 28);
+            const theta = Math.random() * Math.PI * 2;
+            this.waterMolecules.push(new WaterMolecule(this.centerX + r * Math.cos(theta), this.centerY + r * Math.sin(theta)));
+          }
+        } else if (diffWater < 0) {
+          this.waterMolecules.splice(0, -diffWater);
+        }
+      }
+      update(deltaTime = 0.016, physicsOptions = {}) {
+        const dt = Math.min(5.0, Math.max(0.001, deltaTime)) * this.speedMultiplier;
+        const disableBrownian = Boolean(physicsOptions.disableBrownian);
+
+        // 1. 드롭 애니메이션 갱신
+        for (const drop of this.dropAnimations) drop.update(dt);
+        this.dropAnimations = this.dropAnimations.filter(d => !d.isFinished());
+
+        // 2. H+ 와 OH- 간의 인력 및 결합 판정
+        const hList = this.particles.filter(p => p.type === 'H+');
+        const ohList = this.particles.filter(p => p.type === 'OH-');
+        const reactedHSet = new Set();
+        const reactedOHSet = new Set();
+
+        for (const h of hList) {
+          if (reactedHSet.has(h)) continue;
+          let closestOH = null;
+          let minDist = Infinity;
+
+          for (const oh of ohList) {
+            if (reactedOHSet.has(oh)) continue;
+            const dist = Math.hypot(oh.x - h.x, oh.y - h.y);
+            if (dist < minDist) {
+              minDist = dist;
+              closestOH = oh;
+            }
+          }
+
+          if (closestOH && minDist < this.attractionRadius) {
+            const force = (1 - minDist / this.attractionRadius) * 260;
+            const nx = (closestOH.x - h.x) / (minDist || 1);
+            const ny = (closestOH.y - h.y) / (minDist || 1);
+            h.vx += nx * force * dt;
+            h.vy += ny * force * dt;
+            closestOH.vx -= nx * force * dt;
+            closestOH.vy -= ny * force * dt;
+
+            // 충돌 결합
+            if (minDist <= this.combinedRadius) {
+              reactedHSet.add(h);
+              reactedOHSet.add(closestOH);
+              const mx = (h.x + closestOH.x) / 2;
+              const my = (h.y + closestOH.y) / 2;
+              this.waterMolecules.push(new WaterMolecule(mx, my));
+              this.spawnSparks(mx, my, 14);
+              if (this.soundEngine) this.soundEngine.playReact();
+            }
+          }
+        }
+
+        if (reactedHSet.size > 0 || reactedOHSet.size > 0) {
+          this.particles = this.particles.filter(p => !reactedHSet.has(p) && !reactedOHSet.has(p));
+        }
+
+        // 3. 입자 열운동 및 경계 반사
+        for (const p of this.particles) {
+          if (!disableBrownian) {
+            p.vx += (Math.random() - 0.5) * this.thermalJitter * dt;
+            p.vy += (Math.random() - 0.5) * this.thermalJitter * dt;
+            p.vx *= 0.985;
+            p.vy *= 0.985;
+            const spd = Math.hypot(p.vx, p.vy);
+            if (spd > this.maxSpeed) {
+              p.vx = (p.vx / spd) * this.maxSpeed;
+              p.vy = (p.vy / spd) * this.maxSpeed;
+            }
+          }
+          p.x += p.vx * dt;
+          p.y += p.vy * dt;
+
+          const dist = Math.hypot(p.x - this.centerX, p.y - this.centerY);
+          const maxD = this.viewportRadius - p.radius;
+          if (dist > maxD && dist > 0.001) {
+            const nx = (p.x - this.centerX) / dist;
+            const ny = (p.y - this.centerY) / dist;
+            p.x = this.centerX + nx * maxD;
+            p.y = this.centerY + ny * maxD;
+            const dot = p.vx * nx + p.vy * ny;
+            if (dot > 0) {
+              p.vx -= 1.8 * dot * nx;
+              p.vy -= 1.8 * dot * ny;
+            }
+          }
+        }
+
+        // 4. 물 분자 열운동
+        for (const m of this.waterMolecules) {
+          if (!disableBrownian) {
+            m.vx += (Math.random() - 0.5) * (this.thermalJitter * 0.6) * dt;
+            m.vy += (Math.random() - 0.5) * (this.thermalJitter * 0.6) * dt;
+            m.vx *= 0.98;
+            m.vy *= 0.98;
+          }
+          m.x += m.vx * dt;
+          m.y += m.vy * dt;
+          m.rotation += m.vRot * dt;
+
+          const dist = Math.hypot(m.x - this.centerX, m.y - this.centerY);
+          const maxD = this.viewportRadius - m.radius;
+          if (dist > maxD && dist > 0.001) {
+            const nx = (m.x - this.centerX) / dist;
+            const ny = (m.y - this.centerY) / dist;
+            m.x = this.centerX + nx * maxD;
+            m.y = this.centerY + ny * maxD;
+            const dot = m.vx * nx + m.vy * ny;
+            if (dot > 0) {
+              m.vx -= 1.6 * dot * nx;
+              m.vy -= 1.6 * dot * ny;
+            }
+          }
+        }
+
+        // 5. 스파크 파티클
+        for (const spark of this.sparks) spark.update(dt);
+        this.sparks = this.sparks.filter(s => s.life > 0);
+      }
+      render(context = null) {
+        const ctx = context || this.canvas?.getContext?.('2d');
+        if (!ctx) return;
+        ctx.save();
+        ctx.clearRect(0, 0, this.width, this.height);
+
+        // 돋보기 원형 수용액 배경
+        ctx.save();
+        ctx.beginPath();
+        ctx.arc(this.centerX, this.centerY, this.viewportRadius, 0, Math.PI * 2);
+        ctx.clip();
+
+        const grad = ctx.createRadialGradient(this.centerX, this.centerY, 10, this.centerX, this.centerY, this.viewportRadius);
+        grad.addColorStop(0, 'rgba(15, 23, 42, 0.9)');
+        grad.addColorStop(1, 'rgba(30, 41, 59, 0.95)');
+        ctx.fillStyle = grad;
+        ctx.fill();
+
+        // 파동 수면선
+        const waveY = this.centerY - this.viewportRadius * 0.75;
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.25)';
+        ctx.lineWidth = 1.5;
+        ctx.beginPath();
+        ctx.moveTo(this.centerX - this.viewportRadius, waveY);
+        if (typeof ctx.bezierCurveTo === 'function') {
+          ctx.bezierCurveTo(
+            this.centerX - this.viewportRadius * 0.4, waveY - 6,
+            this.centerX + this.viewportRadius * 0.4, waveY + 6,
+            this.centerX + this.viewportRadius, waveY
+          );
+        } else {
+          ctx.lineTo(this.centerX + this.viewportRadius, waveY);
+        }
+        ctx.stroke();
+
+        // 물 분자 렌더링
+        if (this.showWaterMolecules) {
+          for (const m of this.waterMolecules) m.render(ctx);
+        }
+
+        // 이온 입자 렌더링
+        for (const p of this.particles) p.render(ctx, this.highlightNetIons);
+
+        // 스파크 파티클 렌더링
+        for (const s of this.sparks) s.render(ctx);
+
+        ctx.restore();
+
+        // 돋보기 렌즈 림 & 테두리
+        ctx.save();
+        ctx.beginPath();
+        ctx.arc(this.centerX, this.centerY, this.viewportRadius, 0, Math.PI * 2);
+        ctx.strokeStyle = 'rgba(148, 163, 184, 0.85)';
+        ctx.lineWidth = 5;
+        ctx.stroke();
+
+        ctx.beginPath();
+        ctx.arc(this.centerX, this.centerY, this.viewportRadius + 2, 0, Math.PI * 2);
+        ctx.strokeStyle = 'rgba(56, 189, 248, 0.35)';
+        ctx.lineWidth = 2;
+        ctx.stroke();
+        ctx.restore();
+
+        // 드롭 액적 렌더링
+        for (const drop of this.dropAnimations) drop.render(ctx);
+
+        ctx.restore();
+      }
+    }
+
+    /* 4. BeakerRenderer & QuantitativeChartRenderer */
+    class BeakerRenderer {
+      constructor() {
+        this.beakerMarginTop = 85;
+        this.beakerMarginBottom = 30;
+      }
+      getLiquidSurfaceY(volume, height) {
+        const bottomY = height - this.beakerMarginBottom - 18;
+        const topGradY = this.beakerMarginTop + 45;
+        const maxVolume = 45;
+        const clampedVol = Math.max(0, Math.min(maxVolume, volume));
+        return bottomY - (clampedVol / maxVolume) * (bottomY - topGradY);
+      }
+      resolveIndicatorColor(state, indicatorType = 'btb') {
+        if (indicatorType === 'pp') {
+          return state?.solutionState === '염기성' ? '#E11D48' : 'rgba(224, 242, 254, 0.35)';
+        }
+        if (state?.solutionState === '산성') return '#F59E0B';
+        if (state?.solutionState === '중성') return '#10B981';
+        return '#2563EB';
+      }
+      render(canvas, state, indicatorType = 'btb') {
+        if (!canvas || typeof canvas.getContext !== 'function') return;
+        const ctx = canvas.getContext('2d');
+        if (!ctx) return;
+        const width = canvas.width || 400;
+        const height = canvas.height || 420;
+
+        ctx.save();
+        ctx.clearRect(0, 0, width, height);
+
+        const beakerX = width * 0.18;
+        const beakerW = width * 0.64;
+        const beakerTop = this.beakerMarginTop;
+        const beakerBottom = height - this.beakerMarginBottom;
+        const radius = 16;
+        const totalVol = state?.totalVolume || 10;
+        const liquidY = this.getLiquidSurfaceY(totalVol, height);
+
+        // 비커 내부 수용액
+        ctx.save();
+        ctx.beginPath();
+        ctx.moveTo(beakerX, liquidY);
+        ctx.lineTo(beakerX, beakerBottom - radius);
+        ctx.quadraticCurveTo(beakerX, beakerBottom, beakerX + radius, beakerBottom);
+        ctx.lineTo(beakerX + beakerW - radius, beakerBottom);
+        ctx.quadraticCurveTo(beakerX + beakerW, beakerBottom, beakerX + beakerW, beakerBottom - radius);
+        ctx.lineTo(beakerX + beakerW, liquidY);
+        ctx.closePath();
+
+        const liqGrad = ctx.createLinearGradient(beakerX, liquidY, beakerX + beakerW, beakerBottom);
+        if (indicatorType === 'pp') {
+          if (state?.solutionState === '염기성') {
+            liqGrad.addColorStop(0, '#FB7185');
+            liqGrad.addColorStop(1, '#BE123C');
+          } else {
+            liqGrad.addColorStop(0, 'rgba(224, 242, 254, 0.3)');
+            liqGrad.addColorStop(1, 'rgba(186, 230, 253, 0.45)');
+          }
+        } else {
+          if (state?.solutionState === '산성') {
+            liqGrad.addColorStop(0, '#FBBF24');
+            liqGrad.addColorStop(1, '#D97706');
+          } else if (state?.solutionState === '중성') {
+            liqGrad.addColorStop(0, '#34D399');
+            liqGrad.addColorStop(1, '#059669');
+          } else {
+            liqGrad.addColorStop(0, '#60A5FA');
+            liqGrad.addColorStop(1, '#1D4ED8');
+          }
+        }
+        ctx.fillStyle = liqGrad;
+        ctx.fill();
+
+        // 수면 타원
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.4)';
+        ctx.beginPath();
+        ctx.ellipse(beakerX + beakerW / 2, liquidY, beakerW / 2 - 2, 7, 0, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+
+        // 눈금선 (10mL, 20mL, 30mL, 40mL)
+        ctx.save();
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.65)';
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.85)';
+        ctx.font = '11px sans-serif';
+        ctx.textAlign = 'right';
+        ctx.textBaseline = 'middle';
+        [10, 20, 30, 40].forEach(vol => {
+          const gy = this.getLiquidSurfaceY(vol, height);
+          ctx.beginPath();
+          ctx.moveTo(beakerX + 6, gy);
+          ctx.lineTo(beakerX + 22, gy);
+          ctx.stroke();
+          ctx.fillText(`${vol}mL`, beakerX + 54, gy);
+        });
+        ctx.restore();
+
+        // 비커 유리 테두리 & 주둥이
+        ctx.save();
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.85)';
+        ctx.lineWidth = 3;
+        ctx.beginPath();
+        ctx.moveTo(beakerX - 10, beakerTop);
+        ctx.lineTo(beakerX, beakerTop + 6);
+        ctx.lineTo(beakerX, beakerBottom - radius);
+        ctx.quadraticCurveTo(beakerX, beakerBottom, beakerX + radius, beakerBottom);
+        ctx.lineTo(beakerX + beakerW - radius, beakerBottom);
+        ctx.quadraticCurveTo(beakerX + beakerW, beakerBottom, beakerX + beakerW, beakerBottom - radius);
+        ctx.lineTo(beakerX + beakerW, beakerTop);
+        ctx.stroke();
+
+        ctx.beginPath();
+        ctx.ellipse(beakerX + beakerW / 2, beakerTop, beakerW / 2 + 4, 6, 0, 0, Math.PI * 2);
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.7)';
+        ctx.lineWidth = 2;
+        ctx.stroke();
+        ctx.restore();
+
+        // 상단 뷰렛
+        ctx.save();
+        const dropX = beakerX + beakerW * 0.38;
+        const buretteTop = 6;
+        const buretteBottom = beakerTop - 18;
+        ctx.fillStyle = 'rgba(147, 197, 253, 0.22)';
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.8)';
+        ctx.lineWidth = 2;
+        ctx.fillRect(dropX - 10, buretteTop, 20, buretteBottom - buretteTop);
+        ctx.strokeRect(dropX - 10, buretteTop, 20, buretteBottom - buretteTop);
+        ctx.fillStyle = 'rgba(59, 130, 246, 0.7)';
+        ctx.fillRect(dropX - 8, buretteTop + 4, 16, buretteBottom - buretteTop - 8);
+
+        ctx.fillStyle = '#93C5FD';
+        ctx.font = 'bold 10px sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText('NaOH 수용액', dropX, buretteTop + 14);
+        ctx.restore();
+
+        // 비커 내 온도계
+        ctx.save();
+        const thermoX = beakerX + beakerW - 32;
+        const thermoTop = beakerTop - 25;
+        const thermoBottom = beakerBottom - 14;
+        ctx.fillStyle = 'rgba(241, 245, 249, 0.85)';
+        ctx.strokeStyle = 'rgba(203, 213, 225, 0.9)';
+        ctx.lineWidth = 1.5;
+        ctx.fillRect(thermoX - 5, thermoTop, 10, thermoBottom - thermoTop);
+        ctx.strokeRect(thermoX - 5, thermoTop, 10, thermoBottom - thermoTop);
+
+        ctx.beginPath();
+        ctx.arc(thermoX, thermoBottom, 11, 0, Math.PI * 2);
+        ctx.fillStyle = '#EF4444';
+        ctx.fill();
+
+        const temp = state?.temperature || 20.0;
+        const tempFrac = Math.max(0, Math.min(1, (temp - 15) / 17));
+        const mercuryH = tempFrac * (thermoBottom - thermoTop - 15);
+        ctx.fillRect(thermoX - 2.5, thermoBottom - mercuryH, 5, mercuryH);
+
+        // LCD 박스
+        const lcdX = thermoX - 34;
+        const lcdY = thermoTop - 32;
+        ctx.fillStyle = '#0F172A';
+        ctx.strokeStyle = '#38BDF8';
+        ctx.lineWidth = 1.5;
+        ctx.beginPath();
+        if (typeof ctx.roundRect === 'function') ctx.roundRect(lcdX, lcdY, 68, 26, 6);
+        else ctx.rect(lcdX, lcdY, 68, 26);
+        ctx.fill();
+        ctx.stroke();
+
+        ctx.fillStyle = '#38BDF8';
+        ctx.font = 'bold 13px monospace';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(`${temp.toFixed(1)}°C`, thermoX, lcdY + 13);
+        ctx.restore();
+
+        ctx.restore();
+      }
+    }
+
+    class QuantitativeChartRenderer {
+      mapVolumeToX(vol, bounds, minVol = 0, maxVol = 20) {
+        return bounds.x + ((vol - minVol) / (maxVol - minVol)) * bounds.width;
+      }
+      mapValueToY(val, bounds, minVal = 0, maxVal = 25) {
+        return bounds.y + bounds.height - ((val - minVal) / (maxVal - minVal)) * bounds.height;
+      }
+      renderIonChart(canvas, curvePoints = [], currentVolume = 0) {
+        if (!canvas || typeof canvas.getContext !== 'function') return;
+        const ctx = canvas.getContext('2d');
+        if (!ctx) return;
+        const width = canvas.width || 420;
+        const height = canvas.height || 200;
+
+        ctx.save();
+        ctx.clearRect(0, 0, width, height);
+        const bounds = { x: 50, y: 35, width: width - 75, height: height - 70 };
+
+        ctx.fillStyle = 'rgba(15, 23, 42, 0.6)';
+        ctx.fillRect(bounds.x, bounds.y, bounds.width, bounds.height);
+
+        // Y축 그리드
+        ctx.strokeStyle = 'rgba(148, 163, 184, 0.15)';
+        ctx.fillStyle = '#94A3B8';
+        ctx.font = '10px sans-serif';
+        ctx.textAlign = 'right';
+        ctx.textBaseline = 'middle';
+        for (let c = 0; c <= 25; c += 5) {
+          const y = this.mapValueToY(c, bounds, 0, 25);
+          ctx.beginPath(); ctx.moveTo(bounds.x, y); ctx.lineTo(bounds.x + bounds.width, y); ctx.stroke();
+          ctx.fillText(String(c), bounds.x - 6, y);
+        }
+
+        // X축 그리드
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'top';
+        for (let v = 0; v <= 20; v += 5) {
+          const x = this.mapVolumeToX(v, bounds, 0, 20);
+          ctx.beginPath(); ctx.moveTo(x, bounds.y); ctx.lineTo(x, bounds.y + bounds.height); ctx.stroke();
+          ctx.fillText(`${v}`, x, bounds.y + bounds.height + 4);
+        }
+
+        // 축 제목
+        ctx.fillStyle = '#E2E8F0';
+        ctx.font = 'bold 10px sans-serif';
+        ctx.fillText('첨가한 NaOH 부피 (mL)', bounds.x + bounds.width / 2, bounds.y + bounds.height + 18);
+
+        ctx.save();
+        ctx.translate(14, bounds.y + bounds.height / 2);
+        ctx.rotate(-Math.PI / 2);
+        ctx.fillText('이온의 수 (개)', 0, 0);
+        ctx.restore();
+
+        // 중화점 (10mL) 마커
+        const eqX = this.mapVolumeToX(10, bounds, 0, 20);
+        ctx.save();
+        ctx.strokeStyle = 'rgba(52, 211, 153, 0.45)';
+        ctx.lineWidth = 1.5;
+        if (typeof ctx.setLineDash === 'function') ctx.setLineDash([4, 4]);
+        ctx.beginPath(); ctx.moveTo(eqX, bounds.y); ctx.lineTo(eqX, bounds.y + bounds.height); ctx.stroke();
+        ctx.restore();
+
+        ctx.fillStyle = '#34D399';
+        ctx.font = 'bold 10px sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText('★ 중화점 (10mL)', eqX, bounds.y - 12);
+
+        // 곡선 렌더링
+        if (curvePoints && curvePoints.length > 0) {
+          const series = [
+            { key: 'clCount', color: '#10B981', dash: [] },
+            { key: 'naCount', color: '#A855F7', dash: [3, 2] },
+            { key: 'hCount', color: '#EF4444', dash: [] },
+            { key: 'ohCount', color: '#3B82F6', dash: [] },
+            { key: 'totalIons', color: '#94A3B8', dash: [4, 4] }
+          ];
+
+          series.forEach(({ key, color, dash }) => {
+            ctx.save();
+            ctx.strokeStyle = color;
+            ctx.lineWidth = 2;
+            if (dash.length && typeof ctx.setLineDash === 'function') ctx.setLineDash(dash);
+            ctx.beginPath();
+            curvePoints.forEach((pt, idx) => {
+              const x = this.mapVolumeToX(pt.volume, bounds, 0, 20);
+              const y = this.mapValueToY(pt[key] || 0, bounds, 0, 25);
+              if (idx === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+            });
+            ctx.stroke();
+            ctx.restore();
+          });
+
+          // 커서
+          const curX = this.mapVolumeToX(currentVolume, bounds, 0, 20);
+          ctx.save();
+          ctx.strokeStyle = '#FCD34D';
+          ctx.lineWidth = 2;
+          ctx.beginPath(); ctx.moveTo(curX, bounds.y); ctx.lineTo(curX, bounds.y + bounds.height); ctx.stroke();
+          ctx.restore();
+        }
+
+        // 범례
+        ctx.save();
+        const legendItems = [
+          { text: 'Cl⁻', color: '#10B981' },
+          { text: 'Na⁺', color: '#A855F7' },
+          { text: 'H⁺', color: '#EF4444' },
+          { text: 'OH⁻', color: '#3B82F6' },
+          { text: '총이온', color: '#94A3B8' }
+        ];
+        let legX = bounds.x + bounds.width - 180;
+        legendItems.forEach(({ text, color }) => {
+          ctx.fillStyle = color;
+          ctx.fillRect(legX, bounds.y - 16, 8, 4);
+          ctx.fillStyle = '#CBD5E1';
+          ctx.font = '9px sans-serif';
+          ctx.textAlign = 'left';
+          ctx.fillText(text, legX + 11, bounds.y - 13);
+          legX += 36;
+        });
+        ctx.restore();
+
+        ctx.restore();
+      }
+
+      renderTempChart(canvas, curvePoints = [], currentVolume = 0) {
+        if (!canvas || typeof canvas.getContext !== 'function') return;
+        const ctx = canvas.getContext('2d');
+        if (!ctx) return;
+        const width = canvas.width || 420;
+        const height = canvas.height || 180;
+
+        ctx.save();
+        ctx.clearRect(0, 0, width, height);
+        const bounds = { x: 50, y: 32, width: width - 75, height: height - 60 };
+
+        ctx.fillStyle = 'rgba(15, 23, 42, 0.6)';
+        ctx.fillRect(bounds.x, bounds.y, bounds.width, bounds.height);
+
+        // Y축 그리드 (18°C ~ 30°C)
+        ctx.strokeStyle = 'rgba(148, 163, 184, 0.15)';
+        ctx.fillStyle = '#94A3B8';
+        ctx.font = '10px sans-serif';
+        ctx.textAlign = 'right';
+        ctx.textBaseline = 'middle';
+        for (let t = 18; t <= 30; t += 3) {
+          const y = this.mapValueToY(t, bounds, 18, 30);
+          ctx.beginPath(); ctx.moveTo(bounds.x, y); ctx.lineTo(bounds.x + bounds.width, y); ctx.stroke();
+          ctx.fillText(`${t}°C`, bounds.x - 6, y);
+        }
+
+        // X축 그리드
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'top';
+        for (let v = 0; v <= 20; v += 5) {
+          const x = this.mapVolumeToX(v, bounds, 0, 20);
+          ctx.beginPath(); ctx.moveTo(x, bounds.y); ctx.lineTo(x, bounds.y + bounds.height); ctx.stroke();
+          ctx.fillText(`${v}`, x, bounds.y + bounds.height + 4);
+        }
+
+        ctx.fillStyle = '#E2E8F0';
+        ctx.font = 'bold 10px sans-serif';
+        ctx.fillText('첨가한 NaOH 부피 (mL)', bounds.x + bounds.width / 2, bounds.y + bounds.height + 16);
+
+        ctx.save();
+        ctx.translate(14, bounds.y + bounds.height / 2);
+        ctx.rotate(-Math.PI / 2);
+        ctx.fillText('온도 (°C)', 0, 0);
+        ctx.restore();
+
+        if (curvePoints && curvePoints.length > 0) {
+          ctx.save();
+          // 발열 채우기 그라데이션
+          ctx.beginPath();
+          curvePoints.forEach((pt, idx) => {
+            const x = this.mapVolumeToX(pt.volume, bounds, 0, 20);
+            const y = this.mapValueToY(pt.temperature, bounds, 18, 30);
+            if (idx === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+          });
+          ctx.lineTo(this.mapVolumeToX(20, bounds, 0, 20), bounds.y + bounds.height);
+          ctx.lineTo(this.mapVolumeToX(0, bounds, 0, 20), bounds.y + bounds.height);
+          ctx.closePath();
+          const grad = ctx.createLinearGradient(0, bounds.y, 0, bounds.y + bounds.height);
+          grad.addColorStop(0, 'rgba(239, 68, 68, 0.35)');
+          grad.addColorStop(1, 'rgba(239, 68, 68, 0.02)');
+          ctx.fillStyle = grad;
+          ctx.fill();
+
+          // 온도 실선
+          ctx.beginPath();
+          curvePoints.forEach((pt, idx) => {
+            const x = this.mapVolumeToX(pt.volume, bounds, 0, 20);
+            const y = this.mapValueToY(pt.temperature, bounds, 18, 30);
+            if (idx === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+          });
+          ctx.strokeStyle = '#EF4444';
+          ctx.lineWidth = 2.5;
+          ctx.stroke();
+
+          // 최고온도 피크 배지
+          const peakX = this.mapVolumeToX(10, bounds, 0, 20);
+          const peakY = this.mapValueToY(28.5, bounds, 18, 30);
+          ctx.fillStyle = '#EF4444';
+          ctx.beginPath(); ctx.arc(peakX, peakY, 4.5, 0, Math.PI * 2); ctx.fill();
+
+          const badgeText = '최고 온도 28.5°C (중화점)';
+          ctx.font = 'bold 9px sans-serif';
+          const bX = peakX - 65;
+          const bY = peakY - 22;
+          ctx.fillStyle = 'rgba(220, 38, 38, 0.9)';
+          if (typeof ctx.roundRect === 'function') ctx.roundRect(bX, bY, 130, 18, 4);
+          else ctx.rect(bX, bY, 130, 18);
+          ctx.fill();
+          ctx.fillStyle = '#FFFFFF';
+          ctx.textAlign = 'center';
+          ctx.textBaseline = 'middle';
+          ctx.fillText(badgeText, peakX, bY + 9);
+
+          // 커서
+          const curX = this.mapVolumeToX(currentVolume, bounds, 0, 20);
+          ctx.strokeStyle = '#FCD34D';
+          ctx.lineWidth = 2;
+          ctx.beginPath(); ctx.moveTo(curX, bounds.y); ctx.lineTo(curX, bounds.y + bounds.height); ctx.stroke();
+          ctx.restore();
+        }
+
+        ctx.restore();
+      }
+    }
+
+    /* 5. Curriculum Content & Quiz Data */
+    const CONCEPT_TOPICS = [
+      {
+        id: 'ionization',
+        icon: '⚡',
+        title: '1. 산과 염기의 이온화',
+        summary: '물에 녹았을 때 수소 이온(H⁺)을 내놓는 물질을 산, 수산화 이온(OH⁻)을 내놓는 물질을 염기라고 합니다.',
+        points: [
+          '염산(HCl)의 수용액 속 이온화: HCl(aq) → H⁺ + Cl⁻ (수소 이온과 염화 이온으로 나누어짐)',
+          '수산화나트륨(NaOH)의 이온화: NaOH(aq) → Na⁺ + OH⁻ (나트륨 이온과 수산화 이온으로 나누어짐)',
+          '산의 공통적인 성질(신맛, 금속과 반응해 수소 발생)은 H⁺ 때문이며, 염기의 공통 성질(쓴맛, 단백질 녹임)은 OH⁻ 때문입니다.'
+        ]
+      },
+      {
+        id: 'neutralization-reaction',
+        icon: '💧',
+        title: '2. 중화 반응과 알짜 이온 반응식',
+        summary: '산의 수소 이온(H⁺)과 염기의 수산화 이온(OH⁻)이 1:1 개수비로 결합하여 물(H₂O)을 생성하는 반응입니다.',
+        points: [
+          '전체 화학 반응식: HCl(aq) + NaOH(aq) → NaCl(aq) + H₂O(l) + 열',
+          '알짜 이온(H⁺, OH⁻)은 반응하여 물을 생성하며, 구경꾼 이온(Na⁺, Cl⁻)은 반응하지 않고 수용액에 남습니다.',
+          '알짜 이온 반응식: H⁺ + OH⁻ → H₂O',
+          '구경꾼 이온: Na⁺, Cl⁻ (반응에 참여하지 않고 수용액 속에 이온 상태 그대로 존재함)',
+          '핵심 오개념 주의: 중화 반응 후 물속에 NaCl 침전이 생기는 것이 아니라, 물에 완전히 해리된 Na⁺와 Cl⁻ 상태로 유영합니다.'
+        ]
+      },
+      {
+        id: 'temperature-heat',
+        icon: '🔥',
+        title: '3. 중화열과 최고 온도(중화점)',
+        summary: 'H⁺와 OH⁻가 결합하여 물이 생성될 때 열(중화열)이 방출되므로 용액의 온도가 올라갑니다.',
+        points: [
+          '물이 가장 많이 생성될 때 가장 많은 중화열이 방출되어 최고 온도에 도달합니다.',
+          '중화점(Equivalence Point): 산과 염기가 완전히 반응하여 H⁺와 OH⁻가 모두 소진된 지점입니다.',
+          '중화점 이후의 온도 변화: 더 이상 중화열이 발생하지 않으며, 실온(차가운)의 염기성 용액이 계속 섞이므로 온도가 서서히 내려갑니다.',
+          '지시약 색상: BTB 용액은 산성(노랑) → 중성(초록, 중화점) → 염기성(파랑)으로 변합니다.'
+        ]
+      },
+      {
+        id: 'real-life-examples',
+        icon: '🌍',
+        title: '4. 실생활 속 중화 반응의 예',
+        summary: '우리의 일상생활과 자연 곳곳에서 산과 염기를 조절하기 위해 중화 반응을 활용하고 있습니다.',
+        points: [
+          '위산 과다와 제산제: 위액 속 염산(HCl)을 제산제(수산화마그네슘 등 염기성)로 중화하여 속 쓰림을 완화합니다.',
+          '생선의 비린내 제거: 생선 비린내의 원인인 염기성 아민 물질에 산성인 레몬즙을 뿌려 냄새를 없앱니다.',
+          '벌레 쏘임 처치: 벌에 쏘였을 때(산성 폼산 분비) 염기성인 암모니아수나 묽은 베이킹소다수를 발라 통증을 완화합니다.',
+          '산성화된 토양·호수 복원: 산성비로 산성화된 논밭이나 호수에 염기성인 소석회 가루(석회석)를 뿌려 중화합니다.'
+        ]
+      }
+    ];
+
+    const QUIZ_QUESTIONS = [
+      {
+        question: '일정한 양의 묽은 염산에 수산화나트륨 수용액을 조금씩 넣어 완전히 중화(중화점)되었을 때, 혼합 용액 속에 존재하는 이온은?',
+        options: [
+          'H⁺와 Cl⁻',
+          'Na⁺와 OH⁻',
+          'Na⁺와 Cl⁻',
+          'H⁺, Cl⁻, Na⁺, OH⁻ 모두 존재'
+        ],
+        correctIndex: 2,
+        explanation: 'H⁺와 OH⁻는 1:1로 결합하여 물(H₂O)이 되므로 모두 소진되고, 반응에 참여하지 않은 구경꾼 이온인 Na⁺와 Cl⁻만 수용액 속에 이온 상태로 남습니다.'
+      },
+      {
+        question: '중화 반응 실험에서 묽은 염산에 수산화나트륨 수용액을 계속 첨가할 때, 혼합 용액의 온도가 가장 높은 지점은 언제인가?',
+        options: [
+          '수산화나트륨 수용액을 처음 한 방울 넣었을 때',
+          '산과 염기가 완전히 반응하여 생성된 물 분자 수가 가장 많을 때 (중화점)',
+          '수산화나트륨 수용액을 가장 많이 첨가하여 염기성이 강해졌을 때',
+          '반응 내내 열이 발생하지 않으므로 온도는 일정하다'
+        ],
+        correctIndex: 1,
+        explanation: 'H⁺와 OH⁻가 반응하여 물이 생성될 때 중화열이 방출되므로, 반응이 완결되어 물이 가장 많이 생성된 중화점에서 최고 온도를 기록합니다. 그 이후에는 차가운 용액이 추가되어 온도가 낮아집니다.'
+      },
+      {
+        question: 'BTB 용액을 몇 방울 떨어뜨린 묽은 염산에 수산화나트륨 수용액을 계속해서 첨가할 때 나타나는 용액의 색깔 변화 순서는?',
+        options: [
+          '초록색 → 노란색 → 파란색',
+          '노란색 → 초록색 → 파란색',
+          '파란색 → 초록색 → 노란색',
+          '무색 → 무색 → 붉은색'
+        ],
+        correctIndex: 1,
+        explanation: 'BTB 용액은 산성에서 노란색, 중성(중화점)에서 초록색, 염기성에서 파란색을 띱니다. 염산(산성, 노랑)에 수산화나트륨을 넣으면 중성(초록)을 거쳐 염기성(파랑)으로 변합니다.'
+      }
+    ];
+
+    class ConfettiEffect {
+      constructor() {
+        this.particles = [];
+      }
+      trigger(canvas, count = 70) {
+        if (!canvas) return;
+        const width = canvas.width || 400;
+        const height = canvas.height || 300;
+        const colors = ['#F59E0B', '#10B981', '#3B82F6', '#EC4899', '#8B5CF6', '#FCD34D'];
+        for (let i = 0; i < count; i++) {
+          const x = width * 0.5 + (Math.random() - 0.5) * 80;
+          const y = height * 0.4 + (Math.random() - 0.5) * 40;
+          const angle = Math.random() * Math.PI * 2;
+          const speed = 120 + Math.random() * 260;
+          this.particles.push({
+            x, y,
+            vx: Math.cos(angle) * speed,
+            vy: Math.sin(angle) * speed - 120,
+            w: 6 + Math.random() * 6,
+            h: 4 + Math.random() * 8,
+            color: colors[Math.floor(Math.random() * colors.length)],
+            rotation: Math.random() * Math.PI * 2,
+            rotSpeed: (Math.random() - 0.5) * 12,
+            alpha: 1.0,
+            decay: 0.008 + Math.random() * 0.015,
+            gravity: 240
+          });
+        }
+      }
+      update(dt = 0.016) {
+        for (const p of this.particles) {
+          p.x += p.vx * dt;
+          p.y += p.vy * dt;
+          p.vy += p.gravity * dt;
+          p.vx *= 0.98;
+          p.rotation += p.rotSpeed * dt;
+          p.alpha -= p.decay;
+        }
+        this.particles = this.particles.filter(p => p.alpha > 0);
+      }
+      render(ctx) {
+        if (!ctx) return;
+        ctx.save();
+        for (const p of this.particles) {
+          ctx.save();
+          ctx.translate(p.x, p.y);
+          ctx.rotate(p.rotation);
+          ctx.globalAlpha = Math.max(0, p.alpha);
+          ctx.fillStyle = p.color;
+          ctx.fillRect(-p.w / 2, -p.h / 2, p.w, p.h);
+          ctx.restore();
+        }
+        ctx.restore();
+      }
+      clear() {
+        this.particles = [];
+      }
+    }
+
+    /* 6. 애플리케이션 초기화 및 이벤트 연결 */
+    document.addEventListener('DOMContentLoaded', () => {
+      const reaction = new NeutralizationReaction(10, 1);
+      const sound = new SoundEngine();
+      const beakerRenderer = new BeakerRenderer();
+      const chartRenderer = new QuantitativeChartRenderer();
+      const confetti = new ConfettiEffect();
+
+      const beakerCanvas = document.getElementById('beakerCanvas');
+      const particleCanvas = document.getElementById('particleCanvas');
+      const ionChartCanvas = document.getElementById('ionChartCanvas');
+      const tempChartCanvas = document.getElementById('tempChartCanvas');
+      const confettiCanvas = document.getElementById('confettiCanvas');
+
+      const particleSim = new ParticleSimulation(particleCanvas, { soundEngine: sound });
+
+      let currentIndicator = 'btb';
+      let autoTimer = null;
+      let currentTab = 'lab';
+
+      function updateAllViews() {
+        const state = reaction.getState();
+        const curveData = reaction.getCurveData(20, 0.5);
+
+        beakerRenderer.render(beakerCanvas, state, currentIndicator);
+        particleSim.syncWithState(state);
+        chartRenderer.renderIonChart(ionChartCanvas, curveData, state.naohVolume);
+        chartRenderer.renderTempChart(tempChartCanvas, curveData, state.naohVolume);
+
+        const statusBadge = document.getElementById('statusBadge');
+        if (statusBadge) {
+          if (state.solutionState === '산성') {
+            statusBadge.className = 'px-3.5 py-1 rounded-full text-xs font-bold bg-amber-500/20 text-amber-300 border border-amber-500/40 animate-pulse';
+            statusBadge.innerHTML = '🟡 산성 (H⁺ > OH⁻, pH < 7)';
+          } else if (state.solutionState === '중성') {
+            statusBadge.className = 'px-3.5 py-1 rounded-full text-xs font-bold bg-emerald-500/30 text-emerald-300 border border-emerald-400 shadow-lg shadow-emerald-500/30 animate-bounce';
+            statusBadge.innerHTML = '🟢 중성 (H⁺ = OH⁻ = 0, ★ 중화점 도달!)';
+          } else {
+            statusBadge.className = 'px-3.5 py-1 rounded-full text-xs font-bold bg-blue-500/20 text-blue-300 border border-blue-500/40 animate-pulse';
+            statusBadge.innerHTML = '🔵 염기성 (OH⁻ > H⁺, pH > 7)';
+          }
+        }
+
+        const setTxt = (id, val) => {
+          const el = document.getElementById(id);
+          if (el) el.textContent = val;
+        };
+        setTxt('valH', state.hCount);
+        setTxt('valOH', state.ohCount);
+        setTxt('valCl', state.clCount);
+        setTxt('valNa', state.naCount);
+        setTxt('valH2O', state.h2oCount);
+        setTxt('valTemp', `${state.temperature.toFixed(1)}°C`);
+        setTxt('valVolume', `${state.naohVolume.toFixed(1)} mL`);
+      }
+
+      let lastTime = performance.now();
+      function mainLoop(now) {
+        const dt = Math.min(0.05, (now - lastTime) / 1000);
+        lastTime = now;
+
+        if (currentTab === 'lab') {
+          particleSim.update(dt);
+          particleSim.render();
+        } else if (currentTab === 'quiz') {
+          confetti.update(dt);
+          const cCtx = confettiCanvas?.getContext('2d');
+          if (cCtx) {
+            cCtx.clearRect(0, 0, confettiCanvas.width, confettiCanvas.height);
+            confetti.render(cCtx);
+          }
+        }
+        requestAnimationFrame(mainLoop);
+      }
+      requestAnimationFrame(mainLoop);
+
+      // 컨트롤 버튼
+      document.getElementById('btnDrop1')?.addEventListener('click', () => {
+        sound.playDrop();
+        particleSim.spawnDropAnimation('NaOH', () => {
+          reaction.addNaoh(1);
+          updateAllViews();
+          if (reaction.getState().isEquivalencePoint) sound.playEquivalenceFanfare();
+        });
+      });
+
+      document.getElementById('btnDrop5')?.addEventListener('click', () => {
+        sound.playDrop();
+        particleSim.spawnDropAnimation('NaOH', () => {
+          reaction.addNaoh(5);
+          updateAllViews();
+          if (reaction.getState().isEquivalencePoint) sound.playEquivalenceFanfare();
+        });
+      });
+
+      const btnAuto = document.getElementById('btnAuto');
+      btnAuto?.addEventListener('click', () => {
+        if (autoTimer) {
+          clearInterval(autoTimer);
+          autoTimer = null;
+          btnAuto.innerHTML = '<span>▶</span> <span>자동 연속 반응</span>';
+          btnAuto.classList.remove('bg-amber-600');
+          btnAuto.classList.add('bg-indigo-600');
+        } else {
+          btnAuto.innerHTML = '<span>⏸</span> <span>일시정지</span>';
+          btnAuto.classList.remove('bg-indigo-600');
+          btnAuto.classList.add('bg-amber-600');
+
+          autoTimer = setInterval(() => {
+            if (reaction.getState().naohVolume >= 20) {
+              clearInterval(autoTimer);
+              autoTimer = null;
+              btnAuto.innerHTML = '<span>▶</span> <span>자동 연속 반응</span>';
+              btnAuto.classList.remove('bg-amber-600');
+              btnAuto.classList.add('bg-indigo-600');
+              return;
+            }
+            sound.playDrop();
+            particleSim.spawnDropAnimation('NaOH', () => {
+              reaction.addNaoh(1);
+              updateAllViews();
+              if (reaction.getState().isEquivalencePoint) sound.playEquivalenceFanfare();
+            });
+          }, 750);
+        }
+      });
+
+      document.getElementById('btnEquiv')?.addEventListener('click', () => {
+        reaction.setNaohVolume(10);
+        updateAllViews();
+        sound.playEquivalenceFanfare();
+      });
+
+      document.getElementById('btnReset')?.addEventListener('click', () => {
+        if (autoTimer) {
+          clearInterval(autoTimer);
+          autoTimer = null;
+          if (btnAuto) btnAuto.innerHTML = '<span>▶</span> <span>자동 연속 반응</span>';
+        }
+        reaction.reset();
+        updateAllViews();
+      });
+
+      document.querySelectorAll('input[name="indicator"]').forEach(radio => {
+        radio.addEventListener('change', (e) => {
+          currentIndicator = e.target.value;
+          updateAllViews();
+        });
+      });
+
+      document.getElementById('chkNetIons')?.addEventListener('change', (e) => {
+        particleSim.setHighlightNetIons(e.target.checked);
+      });
+
+      document.getElementById('chkWater')?.addEventListener('change', (e) => {
+        particleSim.setShowWaterMolecules(e.target.checked);
+      });
+
+      document.getElementById('selSpeed')?.addEventListener('change', (e) => {
+        particleSim.setSpeed(parseFloat(e.target.value) || 1.0);
+      });
+
+      const btnSound = document.getElementById('btnSound');
+      btnSound?.addEventListener('click', () => {
+        const isMuted = sound.toggleMute();
+        btnSound.innerHTML = isMuted ? '🔇 소리 꺼짐' : '🔊 소리 켜짐';
+        btnSound.classList.toggle('text-slate-400', isMuted);
+        btnSound.classList.toggle('text-emerald-400', !isMuted);
+      });
+
+      // 탭 전환
+      const tabBtnLab = document.getElementById('tabBtnLab');
+      const tabBtnConcept = document.getElementById('tabBtnConcept');
+      const tabBtnQuiz = document.getElementById('tabBtnQuiz');
+      const panelLab = document.getElementById('panelLab');
+      const panelConcept = document.getElementById('panelConcept');
+      const panelQuiz = document.getElementById('panelQuiz');
+
+      function switchTab(tabId) {
+        currentTab = tabId;
+        const tabs = [
+          { id: 'lab', btn: tabBtnLab, panel: panelLab },
+          { id: 'concept', btn: tabBtnConcept, panel: panelConcept },
+          { id: 'quiz', btn: tabBtnQuiz, panel: panelQuiz }
+        ];
+        tabs.forEach(t => {
+          if (t.id === tabId) {
+            t.btn?.classList.add('bg-blue-600', 'text-white', 'shadow-md');
+            t.btn?.classList.remove('text-slate-400', 'hover:text-white', 'hover:bg-slate-800');
+            t.panel?.classList.remove('hidden');
+          } else {
+            t.btn?.classList.remove('bg-blue-600', 'text-white', 'shadow-md');
+            t.btn?.classList.add('text-slate-400', 'hover:text-white', 'hover:bg-slate-800');
+            t.panel?.classList.add('hidden');
+          }
+        });
+        if (tabId === 'lab') updateAllViews();
+      }
+
+      tabBtnLab?.addEventListener('click', () => switchTab('lab'));
+      tabBtnConcept?.addEventListener('click', () => switchTab('concept'));
+      tabBtnQuiz?.addEventListener('click', () => switchTab('quiz'));
+
+      // 개념 카드
+      const conceptContainer = document.getElementById('conceptCardsContainer');
+      if (conceptContainer) {
+        conceptContainer.innerHTML = CONCEPT_TOPICS.map(topic => `
+          <div class="bg-slate-800/70 border border-slate-700/80 rounded-2xl p-6 shadow-lg hover:border-blue-500/50 transition-all">
+            <div class="flex items-center gap-3 mb-3">
+              <span class="text-3xl">${topic.icon}</span>
+              <h3 class="text-xl font-bold text-white">${topic.title}</h3>
+            </div>
+            <p class="text-slate-300 text-sm mb-4 leading-relaxed font-medium bg-slate-900/60 p-3 rounded-xl border border-slate-800">${topic.summary}</p>
+            <ul class="space-y-2 text-sm text-slate-300">
+              ${topic.points.map(pt => `
+                <li class="flex items-start gap-2">
+                  <span class="text-blue-400 mt-0.5">•</span>
+                  <span>${pt}</span>
+                </li>
+              `).join('')}
+            </ul>
+          </div>
+        `).join('');
+      }
+
+      // 골든벨 퀴즈
+      let quizIdx = 0;
+      let score = 0;
+      let answered = false;
+      const quizCard = document.getElementById('quizCard');
+
+      function renderQuiz() {
+        if (!quizCard) return;
+        if (quizIdx >= QUIZ_QUESTIONS.length) {
+          sound.playEquivalenceFanfare();
+          if (confettiCanvas) confetti.trigger(confettiCanvas, 90);
+          quizCard.innerHTML = `
+            <div class="text-center py-8">
+              <span class="text-6xl mb-4 block animate-bounce">🏆</span>
+              <h3 class="text-2xl font-black text-white mb-2">형성평가 골든벨 완료!</h3>
+              <p class="text-lg text-emerald-400 font-bold mb-4">최종 점수: ${score} / ${QUIZ_QUESTIONS.length} (${Math.round((score / QUIZ_QUESTIONS.length) * 100)}점)</p>
+              <p class="text-slate-300 text-sm max-w-md mx-auto mb-6">
+                ${score === QUIZ_QUESTIONS.length ? '완벽합니다! 중화 반응의 원리와 이온 모델을 완전히 마스터했습니다!' : '수고하셨습니다! 틀린 문제는 가상 실험실에서 직접 확인해 보세요.'}
+              </p>
+              <button id="btnRestartQuiz" class="px-6 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-bold rounded-xl shadow-lg transition-all">
+                ↺ 퀴즈 다시 풀기
+              </button>
+            </div>
+          `;
+          document.getElementById('btnRestartQuiz')?.addEventListener('click', () => {
+            quizIdx = 0; score = 0; answered = false; renderQuiz();
+          });
+          return;
+        }
+
+        const q = QUIZ_QUESTIONS[quizIdx];
+        answered = false;
+        quizCard.innerHTML = `
+          <div class="mb-4 flex items-center justify-between">
+            <span class="px-3 py-1 bg-blue-500/20 text-blue-300 text-xs font-bold rounded-full border border-blue-500/30">
+              문제 ${quizIdx + 1} / ${QUIZ_QUESTIONS.length}
+            </span>
+            <span class="text-xs text-slate-400">현재 점수: <b class="text-emerald-400">${score}점</b></span>
+          </div>
+          <h3 class="text-lg font-bold text-white mb-6 leading-relaxed">${q.question}</h3>
+          <div class="grid grid-cols-1 gap-3 mb-6">
+            ${q.options.map((opt, idx) => `
+              <button data-idx="${idx}" class="quiz-btn w-full text-left p-4 rounded-xl bg-slate-900/70 hover:bg-slate-700/80 border border-slate-700 text-slate-200 text-sm font-medium transition-all flex items-center gap-3">
+                <span class="w-7 h-7 rounded-full bg-slate-800 border border-slate-600 flex items-center justify-center text-xs font-bold text-slate-300">${idx + 1}</span>
+                <span>${opt}</span>
+              </button>
+            `).join('')}
+          </div>
+          <div id="quizFeedbackBox" class="hidden p-4 rounded-xl border mb-6 text-sm leading-relaxed"></div>
+          <div class="flex justify-end">
+            <button id="btnNextQuiz" class="hidden px-5 py-2.5 bg-blue-600 hover:bg-blue-500 text-white text-sm font-bold rounded-xl shadow transition-all">
+              다음 문제 ➔
+            </button>
+          </div>
+        `;
+
+        document.querySelectorAll('.quiz-btn').forEach(btn => {
+          btn.addEventListener('click', () => {
+            if (answered) return;
+            answered = true;
+            const chosen = parseInt(btn.dataset.idx, 10);
+            const feedback = document.getElementById('quizFeedbackBox');
+            const nextBtn = document.getElementById('btnNextQuiz');
+
+            if (chosen === q.correctIndex) {
+              score++;
+              sound.playCorrect();
+              btn.classList.add('bg-emerald-600/30', 'border-emerald-400', 'text-emerald-200');
+              if (feedback) {
+                feedback.className = 'p-4 rounded-xl border border-emerald-500/50 bg-emerald-950/40 text-emerald-200 mb-6 text-sm leading-relaxed block';
+                feedback.innerHTML = `<b>🎉 정답입니다!</b><br>${q.explanation}`;
+              }
+            } else {
+              sound.playIncorrect();
+              btn.classList.add('bg-rose-600/30', 'border-rose-400', 'text-rose-200');
+              const correct = document.querySelector(`.quiz-btn[data-idx="${q.correctIndex}"]`);
+              correct?.classList.add('bg-emerald-600/20', 'border-emerald-400', 'text-emerald-300');
+              if (feedback) {
+                feedback.className = 'p-4 rounded-xl border border-rose-500/50 bg-rose-950/40 text-rose-200 mb-6 text-sm leading-relaxed block';
+                feedback.innerHTML = `<b>❌ 오답입니다. (정답: ${q.correctIndex + 1}번)</b><br>${q.explanation}`;
+              }
+            }
+
+            if (nextBtn) {
+              nextBtn.classList.remove('hidden');
+              nextBtn.addEventListener('click', () => {
+                quizIdx++;
+                renderQuiz();
+              }, { once: true });
+            }
+          });
+        });
+      }
+      renderQuiz();
+
+      // 최초 초기 뷰 렌더링
+      updateAllViews();
+    });
+  </script>
+</body>
+</html>
